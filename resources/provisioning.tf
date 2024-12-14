@@ -11,7 +11,7 @@ resource "aws_cloudformation_stack" "karpenter" {
   template_body = file("${path.module}/aux_resources/karpenter_cloudformation.yaml")
 
   parameters = {
-    ClusterName = var.cluster_name
+    ClusterName = data.terraform_remote_state.eks.outputs.cluster_id
   }
 
   capabilities = ["CAPABILITY_NAMED_IAM"]
@@ -60,7 +60,7 @@ resource "helm_release" "karpenter" {
 
   set {
     name  = "settings.aws.clusterName"
-    value = var.cluster_name
+    value = data.terraform_remote_state.eks.outputs.cluster_id
   }
 
   set {
@@ -78,7 +78,7 @@ resource "helm_release" "karpenter" {
 }
 
 resource "aws_iam_role" "karpenter_controller" {
-  name = "Karpenter-${var.cluster_name}"
+  name = "Karpenter-${data.terraform_remote_state.eks.outputs.cluster_id}"
   assume_role_policy = data.aws_iam_policy_document.karpenter_controller_assume_role_policy.json
 }
 

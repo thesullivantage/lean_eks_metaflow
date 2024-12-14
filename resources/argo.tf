@@ -1,31 +1,9 @@
-# provider "helm" {
-#   kubernetes {
-#     host                   = data.aws_eks_cluster.cluster.endpoint
-#     cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
-#     token                  = data.aws_eks_cluster_auth.cluster.token
-#   }
-# }
-
-# resource "helm_release" "cluster_autoscaler" {
-#   name = "autoscaler"
-
-#   depends_on = [module.eks]
-
-#   repository = "https://kubernetes.github.io/autoscaler"
-#   chart      = "cluster-autoscaler"
-#   namespace  = "kube-system"
-
-#   set {
-#     name  = "autoDiscovery.clusterName"
-#     value = local.cluster_name
-#   }
-
-#   set {
-#     name  = "awsRegion"
-#     value = data.aws_region.current.name
-#   }
-# }
-
+provider "kubectl" {
+  host                   = data.terraform_remote_state.eks.outputs.cluster_endpoint
+  cluster_ca_certificate = base64decode(data.terraform_remote_state.eks.outputs.cluster_ca_certificate)
+  token                  = data.terraform_remote_state.eks.outputs.cluster_auth_token
+  load_config_file       = false
+}
 
 resource "kubernetes_namespace" "argo" {
   metadata {
@@ -62,7 +40,7 @@ locals {
                   {
                     "key"      = "kubernetes.io/instance-type"
                     "operator" = "In"
-                    "values"   = ["t3.medium"]
+                    "values"   = ["t3.small", "t3.medium", "m5.large", "m5.xlarge"]
                   }
                 ]
               }

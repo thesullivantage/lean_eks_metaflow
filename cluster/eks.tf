@@ -1,15 +1,25 @@
 
+locals {
+  resource_prefix = "metaflow"
+  resource_suffix = random_string.suffix.result
+  tags = {
+    "managedBy"   = "terraform"
+    "application" = "metaflow-eks-example"
+  }
+  # cluster_name = "mf-${local.resource_suffix}"
+}
+
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "17.23.0"
 
   cluster_name    = var.cluster_name
   cluster_version = "1.24"
-  subnets         = module.vpc.private_subnets
+  subnets         = var.private_subnets
   enable_irsa     = true
   tags            = local.tags
 
-  vpc_id = module.vpc.vpc_id
+  vpc_id = var.vpc_id
 
   node_groups_defaults = {
     ami_type  = "AL2_x86_64"
@@ -47,7 +57,7 @@ module "eks" {
 
 
 resource "aws_iam_policy" "default_node" {
-  name_prefix = "${local.cluster_name}-default"
+  name_prefix = "${var.cluster_name}-default"
   description = "Default policy for cluster ${module.eks.cluster_id}"
   policy      = data.aws_iam_policy_document.default_node.json
 }

@@ -1,3 +1,7 @@
+/* Consider adding toleration for system nodes: karpenter and keda controllers. Verify these addable from the helm_release.
+
+ */
+
 provider "helm" {
   kubernetes {
     host                   = data.terraform_remote_state.eks.outputs.cluster_endpoint
@@ -72,6 +76,24 @@ resource "helm_release" "karpenter" {
     # MARK DEV: change to EKS cluster ID-based
     name  = "settings.aws.interruptionQueueName"
     value = var.cluster_name
+  }
+
+  # tolerate system nodes
+  set {
+    name  = "controller.tolerations[0].key"
+    value = "CriticalAddonsOnly"
+  }
+  set {
+    name  = "controller.tolerations[0].operator"
+    value = "Equal"
+  }
+  set {
+    name  = "controller.tolerations[0].value"
+    value = "true"
+  }
+  set {
+    name  = "controller.tolerations[0].effect"
+    value = "NoSchedule"
   }
 
   depends_on = [module.eks, aws_cloudformation_stack.karpenter]

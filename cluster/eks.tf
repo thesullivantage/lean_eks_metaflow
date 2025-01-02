@@ -28,14 +28,23 @@ module "eks" {
 
 
   node_groups = {
-    system = {  // Renamed from 'main' to 'system'
-      desired_capacity = 1
+    system = { 
+      # High availability for core k8s components:
+      # - CoreDNS (2+ replicas)
+      # - kube-proxy (1 per node)
+      # - VPC CNI (1 per node)
+      # - Metrics Server
+      # - Cluster Autoscaler
+      # - CSI drivers
+      # high availability, redundancy, and no downtime (i.e. for updates)
+      desired_capacity = 2
       max_capacity     = 2
       min_capacity     = 1
-      instance_types   = ["t3.medium"]  // Downsized from m5.2xlarge
+      instance_types   = ["t3.medium", "t3.large"] 
       
       labels = {
         "node-role.kubernetes.io/system" = "true"
+        "kubernetes.io/os" = "linux"     
       }
       
       taints = {
